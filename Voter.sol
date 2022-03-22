@@ -74,7 +74,11 @@ contract Voting is Ownable {
         return proposals;
     }
 
-    function endProposalsRegistration() external onlyOwner checkStatus(WorkflowStatus.ProposalsRegistrationStarted) nextStatus{}
+    function endProposalsRegistration() external onlyOwner checkStatus(WorkflowStatus.ProposalsRegistrationStarted) nextStatus{
+        // OPTIONAL - Need 1 proposal to get next step
+        require(proposals.length > 0, "No proposals has been sent, please inform your voters to make some proposals");
+    }
+    
     function startVotingSession() external onlyOwner checkStatus(WorkflowStatus.ProposalsRegistrationEnded) nextStatus{}
 
     // Voters on the whitelist can make one vote for a proposal
@@ -91,7 +95,14 @@ contract Voting is Ownable {
         return (whitelist[_address].hasVoted, whitelist[_address].votedProposalId); 
     }
 
-    function endVotingSession() external onlyOwner checkStatus(WorkflowStatus.VotingSessionStarted) nextStatus{}
+    function endVotingSession() external onlyOwner checkStatus(WorkflowStatus.VotingSessionStarted) nextStatus{
+        // OPTIONAL - Need 1 vote to go to the next step
+        uint16 tempCountVoters;
+        for (uint16 i = 0; i < proposals.length; i++) {
+            tempCountVoters += proposals[i].voteCount;
+        }
+        require(tempCountVoters > 0, "Nobody has voted, please inform yours voters to do something");
+    }
 
     // Administrator use this function to count the votes and give access to the result to everyone
     function talliedVoting() external onlyOwner checkStatus(WorkflowStatus.VotingSessionEnded) nextStatus{
